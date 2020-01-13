@@ -29,10 +29,25 @@ const GameScreen = props =>{
     const initialGuess = generateRandomBetween(1, 100, props.userChoice)
     const [currentGuess, setCurrentGuess] = useState(initialGuess);
     const [pastGuesses, setPastGuesses] = useState([initialGuess.toString()]);
+    const [detectDiviceWidth, setDeviceWidth] = useState(Dimensions.get('window').width);
+    const [detectDiviceGHeight, setDeviceHeight] = useState(Dimensions.get('window').height);
     const currentLow = useRef(1);
     const currentHigh = useRef(100);
 
     const { userChoice, onGameOver } = props; 
+
+    useEffect(() => {
+        const updateLayout = () => {
+           setDeviceWidth(Dimensions.get('window').width);
+           setDeviceHeight(Dimensions.get('window').height); 
+        };
+
+        Dimensions.addEventListener('change', updateLayout);
+
+        return () => {
+            Dimensions.removeEventListener('change', updateLayout);
+        }
+    });
 
     useEffect(() => {
         if (currentGuess === userChoice) {
@@ -55,6 +70,43 @@ const GameScreen = props =>{
         //setRounds(curRounds => curRounds + 1);
         setPastGuesses(curPastGuesses => [nextNumber.toString(), ...curPastGuesses])
     };
+
+
+    let listContainerStyle = styles.listContainer;
+
+    if (detectDiviceWidth < 350) {
+        listContainerStyle = styles.listContainerBig;
+    }
+
+
+    if (detectDiviceGHeight < 500) {
+        return (
+        <View style={styles.screen}>
+            <Text style={DefaultStylyes.title}>Opponent's Guess</Text>
+                <View style={styles.controls}>
+                <MainButton onPress={nextGuessHandler.bind(this, 'lower')}>
+                    <Ionicons name='md-remove' size={24} color='white' />
+                    </MainButton>
+                        <NumberContainer>{currentGuess}</NumberContainer>
+                <MainButton title='HIGHER' onPress={nextGuessHandler.bind(this, 'higher')}>
+                    <Ionicons name='md-add' size={24} color='white' />
+                    </MainButton>
+                </View>
+                <View style={styles.listContainer}>
+                 {/*    <ScrollView contentContainerStyle={styles.list}>
+                        {pastGuesses.map((guess, index) => (renderListItem(guess, pastGuesses.length - index))
+                        )}
+                    </ScrollView> */}
+                    <FlatList   keyExtractor={(item) => item} 
+                                data={pastGuesses} 
+                                renderItem={renderListItem.bind(this, pastGuesses.length)} 
+                                contentContainerStyle={styles.list}
+                                />
+                </View>
+        </View>
+        );
+    };
+
 
     return (
         <View style={styles.screen}>
@@ -114,6 +166,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%'
+    },
+    controls: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        width: '80%'
     }
 });
 
